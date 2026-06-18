@@ -1,0 +1,32 @@
+name: CI
+on:
+  push:
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - sbt: 1.12.12
+            java: 21
+          - sbt: 2.0.0
+            java: 21
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+        with:
+          sbt-runner-version: ${{ matrix.sbt }}
+      - name: Build
+        shell: bash
+        continue-on-error: true
+        run: |
+          rm -f project/build.properties
+          # works in 1.12.12 and 2.0.0
+          sbt "show Global / testTask / testInputTask" || true
+          # works in 1.12.12, not in 2.0.0
+          sbt "show testTask / testInputTask" || true
